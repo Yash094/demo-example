@@ -12,7 +12,6 @@ import { client } from "./client";
 
 export default function Home() {
   const account = useActiveAccount();
-  const [quantity, setQuantity] = useState(1);
 
   // Mock NFT data - replace with your actual NFT data
   const nft = {
@@ -61,36 +60,25 @@ export default function Home() {
     <div className="flex flex-col items-center gap-4 p-4">
       <ConnectButton client={client} />
 
-      {account && (
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Quantity:</label>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              className="border rounded px-2 py-1"
+              {account && (
+          <div className="flex flex-col items-center gap-4">
+            <TransactionWidget
+              client={client}
+              transaction={
+                claimTo({
+                  contract: nftContract,
+                  quantity: BigInt(1),
+                  tokenId: BigInt(nft.listingId),
+                  to: account?.address || "",
+                  price: "0.086956521739130432",
+                }) as any
+              }
+              title={nft?.metadata?.name}
+              description={nft?.metadata?.description}
+              image={nft?.metadata?.image}
             />
           </div>
-
-          <TransactionWidget
-            client={client}
-            transaction={
-              claimTo({
-                contract: nftContract,
-                quantity: BigInt(quantity),
-                tokenId: BigInt(nft.listingId),
-                to: account?.address || "",
-                price: "0.086956521739130432",
-              }) as any
-            }
-            title={nft?.metadata?.name}
-            description={nft?.metadata?.description}
-            image={nft?.metadata?.image}
-          />
-        </div>
-      )}
+        )}
     </div>
   );
 }

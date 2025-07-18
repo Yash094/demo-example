@@ -1,100 +1,113 @@
 "use client";
 
-import Image from "next/image";
-import { ConnectButton } from "thirdweb/react";
-import thirdwebIcon from "@public/thirdweb.svg";
-import { client } from "./client";
+import React, { useState } from "react";
+import { polygon } from "thirdweb/chains";
+import { ConnectButton, useActiveAccount, TransactionWidget } from "thirdweb/react";
+import { prepareContractCall, getContract, toWei } from "thirdweb";
+import { client } from "../client";
 
 export default function Home() {
+  const account = useActiveAccount();
+  const [quantity, setQuantity] = useState(1);
+  const [listingId, setListingId] = useState(1);
+  const [price, setPrice] = useState("0.001");
+
+  // Mock NFT data - replace with your actual NFT data
+  const nft = {
+    listingId: listingId,
+    metadata: {
+      name: "Sample NFT",
+      description: "This is a sample NFT for demonstration",
+      image: "https://example.com/nft-image.png"
+    }
+  };
+
+  // Create contract instance
+  const nftContract = getContract({
+    address: "0xf12B7F9d8De17295eA10BCEA00d5B7dFb9EA527b",
+    client,
+    chain: polygon,
+  });
+
+  // Create claimTo function
+  const claimTo = ({ contract, quantity, tokenId, to, price }: {
+    contract: any;
+    quantity: bigint;
+    tokenId: bigint;
+    to: string;
+    price: string;
+  }) => {
+    // Convert price to wei using thirdweb's toWei
+    const priceInWei = toWei(price);
+    
+    return prepareContractCall({
+      contract,
+      method: "function purchaseNFT(uint256 _listingId, uint256 _amount) payable",
+      params: [tokenId, quantity],
+      value: priceInWei,
+    });
+  };
+
   return (
-    <main className="p-4 pb-10 min-h-[100vh] flex items-center justify-center container max-w-screen-lg mx-auto">
-      <div className="py-20">
-        <Header />
-
-        <div className="flex justify-center mb-20">
-          <ConnectButton
-            client={client}
-            appMetadata={{
-              name: "Example App",
-              url: "https://example.com",
-            }}
-          />
-        </div>
-
-        <ThirdwebResources />
-      </div>
-    </main>
-  );
-}
-
-function Header() {
-  return (
-    <header className="flex flex-col items-center mb-20 md:mb-20">
-      <Image
-        src={thirdwebIcon}
-        alt=""
-        className="size-[150px] md:size-[150px]"
-        style={{
-          filter: "drop-shadow(0px 0px 24px #a726a9a8)",
-        }}
+    <div className="flex flex-col items-center gap-4 p-4">
+      <ConnectButton
+        client={client}
+        
       />
-
-      <h1 className="text-2xl md:text-6xl font-semibold md:font-bold tracking-tighter mb-6 text-zinc-100">
-        thirdweb SDK
-        <span className="text-zinc-300 inline-block mx-1"> + </span>
-        <span className="inline-block -skew-x-6 text-blue-500"> Next.js </span>
-      </h1>
-
-      <p className="text-zinc-300 text-base">
-        Read the{" "}
-        <code className="bg-zinc-800 text-zinc-300 px-2 rounded py-1 text-sm mx-1">
-          README.md
-        </code>{" "}
-        file to get started.
-      </p>
-    </header>
-  );
-}
-
-function ThirdwebResources() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-3 justify-center">
-      <ArticleCard
-        title="thirdweb SDK Docs"
-        href="https://portal.thirdweb.com/typescript/v5"
-        description="thirdweb TypeScript SDK documentation"
-      />
-
-      <ArticleCard
-        title="Components and Hooks"
-        href="https://portal.thirdweb.com/typescript/v5/react"
-        description="Learn about the thirdweb React components and hooks in thirdweb SDK"
-      />
-
-      <ArticleCard
-        title="thirdweb Dashboard"
-        href="https://thirdweb.com/dashboard"
-        description="Deploy, configure, and manage your smart contracts from the dashboard."
-      />
+      
+              {account && (
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col gap-4 w-full max-w-sm">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Listing ID:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={listingId}
+                  onChange={(e) => setListingId(parseInt(e.target.value) || 1)}
+                  className="border rounded px-2 py-1 flex-1"
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Price (ETH):</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="border rounded px-2 py-1 flex-1"
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Quantity:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  className="border rounded px-2 py-1 flex-1"
+                />
+              </div>
+            </div>
+            
+            <TransactionWidget
+              client={client}
+              transaction={claimTo({
+                contract: nftContract,
+                quantity: BigInt(quantity),
+                tokenId: BigInt(nft.listingId),
+                to: account?.address || "",
+                price: price,
+              }) as any}
+              title={nft?.metadata?.name}
+              description={nft?.metadata?.description}
+              image={nft?.metadata?.image}
+            />
+          </div>
+        )}
     </div>
-  );
-}
-
-function ArticleCard(props: {
-  title: string;
-  href: string;
-  description: string;
-}) {
-  return (
-    <a
-      href={props.href + "?utm_source=next-template"}
-      target="_blank"
-      className="flex flex-col border border-zinc-800 p-4 rounded-lg hover:bg-zinc-900 transition-colors hover:border-zinc-700"
-    >
-      <article>
-        <h2 className="text-lg font-semibold mb-2">{props.title}</h2>
-        <p className="text-sm text-zinc-400">{props.description}</p>
-      </article>
-    </a>
   );
 }

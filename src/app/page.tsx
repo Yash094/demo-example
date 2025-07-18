@@ -58,27 +58,27 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
-      <ConnectButton client={client} />
+      <ConnectButton client={client} chain={polygon}  />
 
-              {account && (
-          <div className="flex flex-col items-center gap-4">
-            <TransactionWidget
-              client={client}
-              transaction={
-                claimTo({
-                  contract: nftContract,
-                  quantity: BigInt(1),
-                  tokenId: BigInt(nft.listingId),
-                  to: account?.address || "",
-                  price: "0.086956521739130432",
-                }) as any
-              }
-              title={nft?.metadata?.name}
-              description={nft?.metadata?.description}
-              image={nft?.metadata?.image}
-            />
-          </div>
-        )}
+      {account && (
+        <div className="flex flex-col items-center gap-4">
+          <TransactionWidget
+            client={client}
+            transaction={
+              claimTo({
+                contract: nftContract,
+                quantity: BigInt(1),
+                tokenId: BigInt(nft.listingId),
+                to: account?.address || "",
+                price: "0.086956521739130432",
+              }) as any
+            }
+            title={nft?.metadata?.name}
+            description={nft?.metadata?.description}
+            image={nft?.metadata?.image}
+          />
+        </div>
+      )}
     </div>
   );
 }

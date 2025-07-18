@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { polygon } from "thirdweb/chains";
 import { ConnectButton, useActiveAccount, TransactionWidget } from "thirdweb/react";
 import { prepareContractCall, getContract, toWei } from "thirdweb";
-import { client } from "../client";
+import { client } from "./client";
 
 export default function Home() {
   const account = useActiveAccount();
